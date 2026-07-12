@@ -238,7 +238,7 @@ def get_agent_prompt(agent_name: str) -> str:
 
 def format_writer_prompt(max_words: int, tone: str, target_audience: str, is_retry: bool = False) -> str:
     """Format writer prompt with specific parameters"""
-    prompt = WRITER_AGENT_PROMPT.format(max_words=max_words)
+    prompt = WRITER_SYSTEM_PROMPT.format(max_words=max_words)
     prompt += f"\n\nTarget audience: {target_audience}"
     prompt += f"\nWriting tone: {tone}"
     if is_retry:

@@ -106,3 +106,26 @@ def merge_sections(state: BlogState) -> Dict[str, Any]:
     draft = "\n\n".join(sections)
 
     return {"draft": draft}
+
+
+def writer_agent_sync(state: BlogState) -> Dict[str, Any]:
+    """Synchronous version of writer agent (simulates fan-out sequentially)"""
+    outline = state["outline"]
+    tone = state["plan"].get("tone", "professional")
+    target_audience = state["plan"].get("target_audience", "general")
+    critic_feedback = state.get("critic_feedback", None)
+
+    sections = []
+    for i, section in enumerate(outline.get("sections", [])):
+        send_input = {
+            "section_index": i,
+            "section": section,
+            "tone": tone,
+            "target_audience": target_audience,
+            "critic_feedback": critic_feedback,
+        }
+        result = write_section_agent(send_input)
+        sections.extend(result["sections"])
+
+    draft = "\n\n".join(sections)
+    return {"sections": sections, "draft": draft}
