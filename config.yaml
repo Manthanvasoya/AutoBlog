@@ -1,0 +1,58 @@
+llm:
+  provider: openai  # openai or anthropic
+  model: gpt-4-turbo
+  temperature: 0.7
+  max_tokens_per_agent:
+    planner: 2000
+    research: 1500
+    outline: 3000
+    writer: 2500
+    visual: 1500
+    seo: 1200
+    critic: 2000
+    publisher: 1000
+
+api:
+  tavily:
+    timeout_seconds: 30
+    max_results_per_query: 5
+  devto:
+    timeout_seconds: 30
+  medium:
+    timeout_seconds: 30
+  openai_image:
+    timeout_seconds: 60
+    size: "1024x1024"
+
+database:
+  sqlite:
+    path: "./data/blog_checkpoints.db"
+    timeout: 5
+  mongodb:
+    uri: "mongodb://localhost:27017/"
+    database: "autoblog"
+    timeout_seconds: 30
+
+blog:
+  min_sections: 3
+  max_sections: 7
+  max_section_words: 300
+  min_intro_words: 100
+  max_intro_words: 250
+  critical_score_threshold: 0.75
+  max_iterations: 3
+
+visualization:
+  chart_formats: [png, jpg]
+  chart_dpi: 150
+  cover_image_size: "1200x630"
+
+publishing:
+  publish_to_devto_first: true
+  set_medium_canonical_to_devto: true
+  tags_per_platform: 5
+
+logging:
+  level: INFO
+  format: "json"  # json or text
+  output: "logs/autoblog.log"
