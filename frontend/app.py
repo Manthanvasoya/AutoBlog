@@ -11,12 +11,12 @@ from src.core.config import init_config, get_app_settings, get_app_config
 from src.graph.workflow import get_workflow
 from src.core.state import BlogState
 from src.agents.planner_agent import planner_agent_sync as run_planner_agent
-from src.agents.outline_agent import outline_agent as run_outline_agent
+from src.agents.outline_agent import outline_agent_sync as run_outline_agent
 from src.agents.writer_agent import writer_node as run_writer_agent
 from src.agents.visual_agent import visual_agent as run_visual_agent
 from src.agents.seo_agent import seo_agent as run_seo_agent
 from src.nodes.assembler_node import assembler_node as run_assembler_node
-from src.agents.critic_agent import critic_agent as run_critic_agent
+from src.agents.critic_agent import critic_agent_sync as run_critic_agent
 
 
 def init_page():

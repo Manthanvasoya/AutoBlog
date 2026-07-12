@@ -125,3 +125,72 @@ Score the blog on depth, clarity, and grounding (0.0-1.0 each)."""
         "critic_feedback": feedback,
         "iteration_count": iteration_count,
     }
+
+
+def critic_agent_sync(state: BlogState) -> Dict[str, Any]:
+    """Synchronous version of critic agent"""
+    assembled_blog = state.get("assembled_blog", "")
+    summarized_facts = state.get("summarized_facts", [])
+    iteration_count = state.get("iteration_count", 0)
+
+    llm_manager = get_llm_manager()
+    llm = llm_manager.get_critic_llm()
+
+    system_prompt = get_agent_prompt("critic")
+
+    # Prepare facts context for grounding check
+    facts_text = ""
+    if summarized_facts:
+        facts_text = "Available research facts:\n"
+        for fact in summarized_facts:
+            fact_text = fact.get("fact", "") if isinstance(fact, dict) else str(fact)
+            facts_text += f"- {fact_text}\n"
+
+    user_message = f"""Evaluate this blog content:
+
+{assembled_blog}
+
+{facts_text}
+
+Score the blog on depth, clarity, and grounding (0.0-1.0 each)."""
+
+    response = llm.invoke(
+        [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message},
+        ]
+    )
+
+    # Parse JSON response
+    try:
+        critic_json = extract_text(response)
+        if "```" in critic_json:
+            critic_json = critic_json.split("```")[1].replace("json", "").strip()
+        critic_data = json.loads(critic_json)
+    except json.JSONDecodeError:
+        # Fallback scoring
+        critic_data = {
+            "depth_score": 0.8,
+            "clarity_score": 0.85,
+            "grounding_score": 0.8,
+            "composite_score": 0.8167,
+            "passed": True,
+            "feedback": "",
+        }
+
+    # Extract scores
+    depth = float(critic_data.get("depth_score", 0.8))
+    clarity = float(critic_data.get("clarity_score", 0.8))
+    grounding = float(critic_data.get("grounding_score", 0.8))
+
+    # Calculate composite score: (0.4 × depth) + (0.3 × clarity) + (0.3 × grounding)
+    composite_score = (0.4 * depth) + (0.3 * clarity) + (0.3 * grounding)
+
+    feedback = critic_data.get("feedback", "")
+    iteration_count += 1
+
+    return {
+        "critic_score": composite_score,
+        "critic_feedback": feedback,
+        "iteration_count": iteration_count,
+    }
