@@ -2,6 +2,7 @@ import os
 import yaml
 from pathlib import Path
 from typing import Any, Dict, Optional
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 from pydantic import Field
 
@@ -38,6 +39,7 @@ class AppSettings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "ignore"
 
 
 def load_yaml_config() -> Dict[str, Any]:
@@ -98,6 +100,7 @@ _config: Optional[Dict[str, Any]] = None
 def init_config() -> None:
     """Initialize configuration (call once at app startup)"""
     global _settings, _config
+    load_dotenv()
     _settings = get_settings()
     _config = get_config()
 
