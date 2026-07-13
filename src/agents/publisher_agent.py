@@ -94,6 +94,7 @@ def publisher_agent(state: BlogState) -> Dict[str, Any]:
                 "section_count": len(state.get("outline", {}).get("sections", [])),
                 "published": published,
                 "publish_timestamp": None if not published else "datetime.utcnow()",
+                "content": assembled_blog,
             }
 
             client.save_blog(blog_record)

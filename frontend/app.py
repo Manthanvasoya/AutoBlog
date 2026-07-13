@@ -18,6 +18,13 @@ from src.agents.seo_agent import seo_agent as run_seo_agent
 from src.nodes.assembler_node import assembler_node as run_assembler_node
 from src.agents.critic_agent import critic_agent_sync as run_critic_agent
 from src.agents.publisher_agent import publisher_agent as run_publisher_agent
+from src.database.mongodb_client import create_mongodb_client
+
+def get_db_client():
+    """Helper to get MongoDB client"""
+    settings = get_app_settings()
+    client = create_mongodb_client(settings.mongodb_uri, settings.mongodb_database)
+    return client
 
 
 def init_page():
@@ -53,6 +60,9 @@ def init_session_state():
 
     if "blog_history" not in st.session_state:
         st.session_state.blog_history = []
+
+    if "viewing_published_blog" not in st.session_state:
+        st.session_state.viewing_published_blog = None
 
 
 def render_header():
@@ -144,13 +154,24 @@ def render_sidebar():
 
         st.divider()
 
-        st.header("📊 History")
-        if st.session_state.blog_history:
-            for i, blog in enumerate(st.session_state.blog_history[-5:]):
-                title = blog.get("title", "Untitled")
-                st.write(f"{i+1}. {title}")
-        else:
-            st.write("No published blogs yet")
+        st.header("📊 Published Blogs")
+        try:
+            client = get_db_client()
+            recent_blogs = client.get_recent_blogs(limit=15)
+            client.disconnect()
+            
+            if recent_blogs:
+                for blog in recent_blogs:
+                    title = blog.get("title", "Untitled")
+                    if st.sidebar.button(f"📄 {title}", key=f"hist_{blog['_id']}", use_container_width=True):
+                        st.session_state.viewing_published_blog = blog
+                        st.session_state.current_blog = None
+                        st.session_state.checkpoint_name = None
+                        st.rerun()
+            else:
+                st.sidebar.info("No published blogs yet.")
+        except Exception as e:
+            st.sidebar.error(f"Could not load history: {e}")
 
 
 def render_checkpoint_planner():
@@ -460,13 +481,61 @@ def render_published_page():
         st.rerun()
 
 
+def render_published_blog_metadata():
+    """Render metadata and content for a selected published blog"""
+    blog = st.session_state.viewing_published_blog
+    
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.header(f"📄 {blog.get('title', 'Untitled')}")
+        st.write(f"**Topic:** {blog.get('topic', 'N/A')}")
+    with col2:
+        if st.button("⬅️ Back to Generator", use_container_width=True):
+            st.session_state.viewing_published_blog = None
+            st.rerun()
+            
+    st.divider()
+    
+    # Metadata metrics
+    m1, m2, m3, m4 = st.columns(4)
+    with m1:
+        st.metric("Word Count", blog.get("word_count", 0))
+    with m2:
+        st.metric("Quality Score", f"{blog.get('critic_score', 0.0):.2f}")
+    with m3:
+        st.metric("Sections", blog.get("section_count", 0))
+    with m4:
+        status = "✅ Yes" if blog.get("published") else "❌ No"
+        st.metric("Published Status", status)
+        
+    # URLs
+    devto = blog.get("devto_url")
+    medium = blog.get("medium_url")
+    if devto or medium:
+        st.write("### Live Links")
+        if devto:
+            st.markdown(f"🚀 **Dev.to:** [{devto}]({devto})")
+        if medium:
+            st.markdown(f"🚀 **Medium:** [{medium}]({medium})")
+            
+    st.divider()
+    st.write("### Blog Content")
+    content = blog.get("content")
+    if content:
+        st.markdown(content)
+    else:
+        st.info("Full content was not saved for this older blog post.")
+
+
 def main():
     """Main application entry point"""
     init_page()
     init_session_state()
     render_sidebar()
 
-    if st.session_state.current_blog is None:
+    if st.session_state.viewing_published_blog is not None:
+        render_published_blog_metadata()
+    elif st.session_state.current_blog is None:
         render_header()
         render_new_blog_form()
 
