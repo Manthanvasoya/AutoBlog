@@ -17,6 +17,7 @@ from src.agents.visual_agent import visual_agent as run_visual_agent
 from src.agents.seo_agent import seo_agent as run_seo_agent
 from src.nodes.assembler_node import assembler_node as run_assembler_node
 from src.agents.critic_agent import critic_agent_sync as run_critic_agent
+from src.agents.publisher_agent import publisher_agent as run_publisher_agent
 
 
 def init_page():
@@ -388,6 +389,11 @@ def render_checkpoint_critic():
                     # Store publishing choices in session state for the publisher agent
                     st.session_state.current_blog["publish_to_devto"] = publish_devto
                     st.session_state.current_blog["publish_to_medium"] = publish_medium
+                    
+                    with st.spinner("🚀 Publishing blog to selected platforms..."):
+                        publisher_result = run_publisher_agent(st.session_state.current_blog)
+                        st.session_state.current_blog.update(publisher_result)
+                        
                     st.session_state.confirm_publish = False
                     st.session_state.checkpoint_name = "published"
                     st.rerun()

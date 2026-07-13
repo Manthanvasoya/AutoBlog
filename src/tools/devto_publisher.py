@@ -48,8 +48,15 @@ class DevToPublisher:
             "Content-Type": "application/json",
         }
 
-        # Limit tags to 5
-        tags = tags[:5]
+        import re
+
+        # Dev.to requires tags to be strictly alphanumeric and max 4 tags
+        clean_tags = []
+        for t in tags:
+            clean = re.sub(r'[^a-zA-Z0-9]', '', t).lower()
+            if clean:
+                clean_tags.append(clean)
+        tags = clean_tags[:4]
 
         article_data = {
             "article": {
@@ -67,8 +74,10 @@ class DevToPublisher:
         if canonical_url:
             article_data["article"]["canonical_url"] = canonical_url
 
+        print("DEVTO PAYLOAD:", article_data)
         response = requests.post(self.base_url, json=article_data, headers=headers)
-        response.raise_for_status()
+        if not response.ok:
+            raise ValueError(f"Dev.to API error: {response.status_code} - {response.text}")
 
         published_article = response.json()
         return {

@@ -46,7 +46,7 @@ class MongoDBClient:
 
     def get_collection(self, collection_name: str) -> Collection:
         """Get a collection from the database"""
-        if not self._db:
+        if self._db is None:
             raise RuntimeError("Not connected to MongoDB. Call connect() first.")
         return self._db[collection_name]
 

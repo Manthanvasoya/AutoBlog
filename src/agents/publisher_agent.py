@@ -46,12 +46,15 @@ def publisher_agent(state: BlogState) -> Dict[str, Any]:
         # Publish to Dev.to first (synchronous) — only if user selected it
         if publish_to_devto:
             try:
+                # Dev.to expects a public URL for cover images, not a local file path
+                cover_url = cover_image_path if cover_image_path and cover_image_path.startswith("http") else None
+                
                 devto_url = publish_to_devto_api(
                     title=title,
                     markdown=assembled_blog,
                     tags=seo_tags,
                     description=meta_description,
-                    cover_image_url=cover_image_path if cover_image_path else None,
+                    cover_image_url=cover_url,
                 )
             except Exception as e:
                 print(f"Dev.to publishing failed: {e}")

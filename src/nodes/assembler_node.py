@@ -27,13 +27,24 @@ def assembler_node(state: BlogState) -> Dict[str, Any]:
     title = state.get("outline", {}).get("title", "")
     outline = state.get("outline", {})
 
+    import re
+    # Clean tags for frontmatter (Dev.to parses this and throws 422 if invalid)
+    clean_tags = []
+    for t in seo_tags:
+        clean = re.sub(r'[^a-zA-Z0-9]', '', str(t)).lower()
+        if clean:
+            clean_tags.append(clean)
+    clean_tags = clean_tags[:4]
+
+    # Only include cover image in frontmatter if it's a public URL
+    cover_line = f"\ncover_image: {cover_image_path}" if cover_image_path and cover_image_path.startswith("http") else ""
+
     # Step 1: Build SEO frontmatter
     frontmatter = f"""---
 title: {title}
 description: {meta_description}
-tags: {", ".join(seo_tags)}
-slug: {slug}
-cover_image: {cover_image_path}
+tags: {", ".join(clean_tags)}
+slug: {slug}{cover_line}
 ---"""
 
     # Step 2: Embed charts into draft
