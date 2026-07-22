@@ -36,9 +36,9 @@ END — Live on Dev.to + Medium
 - **Tavily** — Internet research API
 - **SQLite** — LangGraph checkpointing (HITL pause/resume)
 - **MongoDB** — Application data (blogs, SEO, quality logs)
-- **Streamlit** — Frontend UI with 3 interactive checkpoints
+- **Streamlit** — Frontend UI with 3 interactive checkpoints & Published Blog History
 - **Matplotlib** — Chart generation
-- **DALL-E** — Cover image generation
+- **Pollinations.ai** — Free, on-the-fly cover image generation (Replaced DALL-E)
 
 ## 📦 Installation
 
@@ -144,7 +144,7 @@ OneBlog/
 - Context-pruned per agent: ~1500 tokens per section (vs ~8000 full state)
 
 ### 5. **Visual + SEO** (Parallel Batch)
-- **Visual agent:** Generates Matplotlib charts + DALL-E cover
+- **Visual agent:** Generates Matplotlib charts + Pollinations.ai cover image URLs directly
 - **SEO agent:** Tags, slug, meta_description, keywords
 - Both run simultaneously (no dependencies)
 - Results merged before assembly
@@ -184,7 +184,7 @@ Writer produces raw markdown. Visual and SEO produce assets separately. Assemble
 
 ### Why SQLite + MongoDB?
 - **SQLite:** Exclusive use for LangGraph checkpointing. Zero manual schema management.
-- **MongoDB:** Application data (blogs, SEO, quality logs). Schema-free model fits variable content perfectly.
+- **MongoDB:** Application data (blogs, SEO, quality logs). Schema-free model fits variable content perfectly. The system stores the **full markdown text** of every generated blog directly in MongoDB for historical reference.
 
 ### Why Dev.to Before Medium?
 Dev.to publishes synchronously and returns live URL immediately. Medium needs this URL as canonical source to prevent Google duplicate content penalty.
@@ -216,8 +216,8 @@ Expected output:
 - Track scores and feedback across iterations
 
 **View published blogs:**
-- MongoDB `blogs` collection stores final records
-- Links to published Dev.to and Medium URLs
+- **Streamlit Sidebar:** The UI automatically queries MongoDB to list your last 15 published blogs. Clicking them opens a dedicated "Metadata View" rendering the full markdown content, statistics, and live Dev.to/Medium links.
+- MongoDB `blogs` collection stores final records.
 
 ## 🔧 Configuration
 
@@ -291,7 +291,14 @@ Ensure all agents are imported in `src/graph/workflow.py`
 Verify MongoDB URI in `.env` and ensure MongoDB is running
 
 ### `StreamHandler missing API key`
-Check `.env` file has `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`
+Check `.env` file has `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GOOGLE_API_KEY`.
+
+### `Dev.to API Error 422: Unprocessable Entity`
+- Ensure tags are strictly alphanumeric with no spaces, and limited to a maximum of 4 tags.
+- Ensure the `cover_image` is a valid public HTTP URL (which is handled automatically by Pollinations.ai) rather than a local file path.
+
+### `Database objects do not implement truth value testing`
+If connecting to modern PyMongo (v4.0+), ensure connection checks use `if db is not None:` instead of `if db:`.
 
 ### HITL checkpoint stuck
 SQLite checkpoint may be locked. Delete `data/blog_checkpoints.db` and restart.

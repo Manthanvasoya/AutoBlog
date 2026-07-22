@@ -35,10 +35,18 @@ def visual_agent(state: BlogState) -> Dict[str, Any]:
             chart_path = f"data/charts/{heading.lower().replace(' ', '_')}.png"
             chart_paths.append({"section_heading": heading, "path": chart_path})
 
-    # Placeholder cover image path
-    cover_image_path = "data/covers/cover_image.png"
+    import urllib.parse
+    
+    # Generate Cover Image using Pollinations.ai (Free AI Image Generator)
+    if topic:
+        prompt = f"A professional blog cover image about {topic}, high quality, minimalist, 16:9 aspect ratio"
+    else:
+        prompt = f"A professional technology blog cover image, abstract, high quality, 16:9 aspect ratio"
+        
+    encoded_prompt = urllib.parse.quote(prompt)
+    cover_image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
 
     return {
         "chart_paths": chart_paths,
-        "cover_image_path": cover_image_path,
+        "cover_image_path": cover_image_url,
     }
