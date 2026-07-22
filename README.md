@@ -168,26 +168,7 @@ OneBlog/
 - Publishes to **Medium second** with `canonicalUrl` = Dev.to URL
 - Sets `published: True`, stores in MongoDB
 
-## 💡 Key Design Decisions
 
-### Why Conditional Research?
-Planner sets `needs_research` upfront. Evergreen topics skip Tavily entirely (cost + latency savings).
-
-### Why Send API for Section Writing?
-Each section is independent. Writing 6 sections in parallel is 6x faster than sequential.
-
-### Why Context Pruning per Agent?
-Each agent receives only relevant fields (~60% token reduction). Writer gets 1500 tokens instead of 8000.
-
-### Why Assembler Node?
-Writer produces raw markdown. Visual and SEO produce assets separately. Assembler combines them deterministically. **Critic evaluates the actual publishable blog**, not raw text.
-
-### Why SQLite + MongoDB?
-- **SQLite:** Exclusive use for LangGraph checkpointing. Zero manual schema management.
-- **MongoDB:** Application data (blogs, SEO, quality logs). Schema-free model fits variable content perfectly. The system stores the **full markdown text** of every generated blog directly in MongoDB for historical reference.
-
-### Why Dev.to Before Medium?
-Dev.to publishes synchronously and returns live URL immediately. Medium needs this URL as canonical source to prevent Google duplicate content penalty.
 
 ## 🧪 Testing
 
@@ -282,26 +263,7 @@ CMD ["streamlit", "run", "frontend/app.py"]
 
 **Total pipeline:** ~50 seconds end-to-end (with research)
 
-## 🐛 Troubleshooting
 
-### `LangGraphError: Node not found`
-Ensure all agents are imported in `src/graph/workflow.py`
-
-### `MongoDBServerSelectionTimeoutError`
-Verify MongoDB URI in `.env` and ensure MongoDB is running
-
-### `StreamHandler missing API key`
-Check `.env` file has `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GOOGLE_API_KEY`.
-
-### `Dev.to API Error 422: Unprocessable Entity`
-- Ensure tags are strictly alphanumeric with no spaces, and limited to a maximum of 4 tags.
-- Ensure the `cover_image` is a valid public HTTP URL (which is handled automatically by Pollinations.ai) rather than a local file path.
-
-### `Database objects do not implement truth value testing`
-If connecting to modern PyMongo (v4.0+), ensure connection checks use `if db is not None:` instead of `if db:`.
-
-### HITL checkpoint stuck
-SQLite checkpoint may be locked. Delete `data/blog_checkpoints.db` and restart.
 
 ## 📚 Resources
 
